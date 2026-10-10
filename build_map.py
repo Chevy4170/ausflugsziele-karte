@@ -7,7 +7,7 @@ from pathlib import Path
 import requests
 
 BASE="https://api.notion.com/v1"
-ROOT="3f5547fd-c285-8181-96d2-f1f56adb72e7"
+ROOTS=[("3f5547fd-c285-8181-96d2-f1f56adb72e7","Ausflugsziele"),("3f5547fd-c285-814b-a0e5-d4349535a091","Ferienideen")]
 HEAD={"Authorization":"Bearer "+os.environ["NOTION_API_KEY"],"Notion-Version":"2022-06-28"}
 SESSION=requests.Session()
 SESSION.headers.update(HEAD)
@@ -56,27 +56,28 @@ def geocode(query):
 
 def build():
     points=[]
-    for block in children(ROOT):
-        if block.get("type")!="child_page":
-            continue
-        title=block["child_page"]["title"]
-        if title=="Karte":
-            continue
-        entry=children(block["id"])
-        query=location_query(title,entry)
-        if not query:
-            continue
-        try:
-            coords=geocode(query)
-        except Exception as exc:
-            print("Geocoding fehlgeschlagen:",title,str(exc)[:160],flush=True)
-            coords=None
-        time.sleep(1.1)
-        if not coords:
-            print("Kein eindeutiger Standort:",title,query,flush=True)
-            continue
-        points.append({"title":title,"url":"https://www.notion.so/"+block["id"].replace("-",""),**coords})
-        print("Karten-Pin:",title,query,flush=True)
+    for root,category in ROOTS:
+      for block in children(root):
+          if block.get("type")!="child_page":
+              continue
+          title=block["child_page"]["title"]
+          if title=="Karte":
+              continue
+          entry=children(block["id"])
+          query=location_query(title,entry)
+          if not query:
+              continue
+          try:
+              coords=geocode(query)
+          except Exception as exc:
+              print("Geocoding fehlgeschlagen:",title,str(exc)[:160],flush=True)
+              coords=None
+          time.sleep(1.1)
+          if not coords:
+              print("Kein eindeutiger Standort:",title,query,flush=True)
+              continue
+          points.append({"title":title,"url":"https://www.notion.so/"+block["id"].replace("-",""),"category":category,**coords})
+          print("Karten-Pin:",title,query,flush=True)
     template=Path("map-template.html").read_text(encoding="utf-8")
     data=json.dumps(points,ensure_ascii=False).replace("<","\\u003c")
     output=template.replace("/*MAP_DATA*/[]",data)
