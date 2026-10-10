@@ -37,13 +37,13 @@ def location_query(title,blocks):
         lines+=plain(block).splitlines()
     # Only geocode an explicit destination or an identifiable place in the title.
     for line in lines:
-        m=re.search(r"(?:^|\\*\\*)\\s*(?:Ort|Standort|Adresse|Zielort)\\s*:?\\s*(?:\\*\\*)?\\s*(.+)",line,re.I)
+        m=re.search(r"(?:^|\*\*)\s*(?:Ort|Standort|Adresse|Zielort)\s*:?\s*(?:\*\*)?\s*(.+)",line,re.I)
         if m:
             candidate=m.group(1).strip(" *-:")
             if "nicht ermittelt" not in candidate.lower() and len(candidate)>3:
                 return candidate[:180]
     # If the title contains a distinctive geographic name, geocoder may resolve it.
-    return re.sub(r"\\s+[–-]\\s+.*$","",title).strip()[:100]
+    return re.sub(r"\s+[–-]\s+.*$","",title).strip()[:100]
 
 def geocode(query):
     response=requests.get("https://nominatim.openstreetmap.org/search",params={"q":query,"format":"json","limit":1,"addressdetails":0},headers={"User-Agent":"NotionAusflugszieleMap/1.0 (personal hobby project; github.com/Chevy4170/notion-video-archiv)","Accept-Language":"de"},timeout=30)
