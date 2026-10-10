@@ -67,12 +67,21 @@ def build():
           query=location_query(title,entry)
           if not query:
               continue
-          try:
-              coords=geocode(query)
-          except Exception as exc:
-              print("Geocoding fehlgeschlagen:",title,str(exc)[:160],flush=True)
-              coords=None
-          time.sleep(1.1)
+          # Prefer explicitly sourced coordinates over potentially ambiguous geocoding.
+          fulltext="\\n".join(plain(b) for b in entry)
+          match=re.search(r"(?im)^\\s*Koordinaten\\s*:\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)",fulltext)
+          coords=None
+          if match:
+              lat,lon=float(match.group(1)),float(match.group(2))
+              if -90<=lat<=90 and -180<=lon<=180:
+                  coords={"lat":lat,"lon":lon}
+          if coords is None:
+              try:
+                  coords=geocode(query)
+              except Exception as exc:
+                  print("Geocoding fehlgeschlagen:",title,str(exc)[:160],flush=True)
+                  coords=None
+              time.sleep(1.1)
           if not coords:
               print("Kein eindeutiger Standort:",title,query,flush=True)
               continue
