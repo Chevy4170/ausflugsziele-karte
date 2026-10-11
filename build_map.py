@@ -68,8 +68,8 @@ def build():
           if not query:
               continue
           # Prefer explicitly sourced coordinates over potentially ambiguous geocoding.
-          fulltext="\\n".join(plain(b) for b in entry)
-          match=re.search(r"(?im)^\\s*Koordinaten\\s*:\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)",fulltext)
+          fulltext="\n".join(plain(b) for b in entry)
+          match=re.search(r"(?im)^\s*Koordinaten\s*:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)",fulltext)
           coords=None
           if match:
               lat,lon=float(match.group(1)),float(match.group(2))
